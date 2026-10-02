@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    # MODE=PostgreSQL makes H2 emulate Postgres-specific SQL behavior/functions
+    # more closely (useful if a native query is ever added later). It does NOT
+    # by itself make H2 execute the Postgres-specific Flyway migration below —
+    # that's a separate decision, explained next to `flyway.enabled`.
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    # Tests skip Flyway and let Hibernate generate the schema straight from
+    # the entities, rather than running the real Postgres migration against
+    # H2. This was true when the target database was MySQL (whose ENGINE=/
+    # CHARSET= clauses H2 can't parse at all) and it's still the right call
+    # now that the target is Postgres: H2's Postgres compatibility mode is
+    # good, but "good" isn't the same guarantee as "generated straight from
+    # the same entities Hibernate validates against in every environment" —
+    # e.g. GENERATED ALWAYS AS IDENTITY and TIMESTAMPTZ are exactly the kind
+    # of syntax that's easy to get subtly wrong in a hand-written migration
+    # but impossible to get wrong here, since Hibernate derives the DDL
+    # itself. The migration is still cross-checked field-for-field against
+    # the entities separately (see the comment header in V1__init_schema.sql).
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+app:
+  jwt:
+    secret: test-only-secret-key-not-for-any-real-environment-use
+    expiration-minutes: 60
+  cors:
+    allowed-origins: http://localhost:5173
+  seed:
+    enabled: false
+  risk:
+    attendance-threshold: 75.0
+    score-threshold: 50.0

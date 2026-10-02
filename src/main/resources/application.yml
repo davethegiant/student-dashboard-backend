@@ -1,0 +1,74 @@
+spring:
+  profiles:
+    default: local
+
+  application:
+    name: student-dashboard-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:student_dashboard}
+    username: ${DB_USERNAME:dashboard_user}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema — Hibernate only validates it matches on
+      # startup, it never auto-generates or alters tables.
+      ddl-auto: validate
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+app:
+  jwt:
+    # MUST be overridden via JWT_SECRET in any non-local environment —
+    # at least 256 bits (32 chars) for HS256. This default is dev-only.
+    secret: ${JWT_SECRET:dev-only-secret-key-change-me-before-deploying-anywhere-real}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  seed:
+    # Populates demo data (admin, teachers, classes, subjects, students,
+    # results, attendance) on first run if the database is empty.
+    enabled: ${SEED_DEMO_DATA:true}
+    # Seeded/updated ADMIN login — override all three in any non-local
+    # environment rather than shipping the dev default.
+    admin-username: ${ADMIN_USERNAME:admin}
+    admin-email: ${ADMIN_EMAIL:admin@brightfield.edu.ng}
+    admin-password: ${ADMIN_PASSWORD:admin123}
+  risk:
+    # A student is flagged once attendance or average score falls below
+    # these thresholds — matches the existing frontend's logic exactly by
+    # default. Override per environment without a code change if needed.
+    attendance-threshold: ${RISK_ATTENDANCE_THRESHOLD:75.0}
+    score-threshold: ${RISK_SCORE_THRESHOLD:50.0}
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.example.studentdashboard: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
